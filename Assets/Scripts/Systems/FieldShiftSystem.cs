@@ -1,19 +1,18 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Entitas;
 
 public class FieldShiftSystem : ReactiveSystem<GameEntity> {
 
     private GameContext _context;
+    private List<GameEntity> _shifting = new List<GameEntity>();
 
     public FieldShiftSystem(Contexts contexts) : base(contexts.game) {
         _context = contexts.game;
     }
 
     protected override ICollector<GameEntity> GetTrigger(IContext<GameEntity> context) {
-        //return context.CreateCollector(GameMatcher.FieldElement.Removed);
-        return context.CreateCollector(GameMatcher.FieldElement);
+        return context.CreateCollector(GameMatcher.Destroyed);
     }
 
     protected override bool Filter(GameEntity entity) {
@@ -21,36 +20,43 @@ public class FieldShiftSystem : ReactiveSystem<GameEntity> {
     }
 
     protected override void Execute(List<GameEntity> entities) {
-        FieldComponent field = _context.field;
-        for (int i = 0; i < field.width; i++) {
-            for (int j = 0; j < field.height; j++) {
-                foreach (GameEntity entity in _context.GetEntities(GameMatcher.Position)) {
+        int fieldWidth = _context.field.width;
+        int fieldHeight = _context.field.height;
+
+        for (int i = 0; i < fieldWidth; i++) {
+            int j = 0;
+            int shift = 0;
+            bool blocked = false;
+            _shifting.Clear();
+            for (j = 0; j < fieldHeight; j++) {
+                _shifting.Add(GetEntityAtPos(i, j));
+            }
+            for (j = 0; j < _shifting.Count; j++) {
+                GameEntity entity = _shifting[j];
+                if (entity != null) {
                     if (entity.isMovable) {
-                        int nextPos = GetNextPos(entity.position.x, entity.position.y);
-                        if (nextPos != entity.position.y) {
-                            entity.ReplacePosition(entity.position.x, nextPos);
+                        if (!blocked && shift > 0) {
+                            entity.isShifted = true;
+                            entity.ReplacePosition(entity.position.x, entity.position.y - shift);
                         }
+                    } else {
+                        shift = 0;
                     }
+                    blocked = !entity.isMovable;
+                } else {
+                    shift++;
+                    blocked = false;
                 }
             }
         }
     }
 
-    private int GetNextPos(int x, int y) {
-        int r = y - 1;
-        while (r >= 0 && GetMatchPosEntitiesCount(x, y) == 0) {
-            r--;
-        }
-        return (r + 1);
-    }
-
-    private int GetMatchPosEntitiesCount(int x, int y) {
-        int result = 0;
-        foreach (GameEntity entity in _context.GetEntities(GameMatcher.Position)) {
+    private GameEntity GetEntityAtPos(int x, int y) {
+        foreach (GameEntity entity in _context.GetEntities(GameMatcher.AllOf(GameMatcher.Position, GameMatcher.FieldElement))) {
             if (entity.position.x == x && entity.position.y == y) {
-                result++;
+                return entity;
             }
         }
-        return result;
+        return null;
     }
 }

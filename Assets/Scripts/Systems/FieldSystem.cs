@@ -5,9 +5,6 @@ using Entitas;
 
 public class FieldSystem : ReactiveSystem<GameEntity>, IInitializeSystem {
 
-    public static readonly int FIELD_WIDTH = 8;
-    public static readonly int FIELD_HEIGHT = 8;
-
     private GameContext _context;
 
     public FieldSystem(Contexts contexts) : base(contexts.game) {
@@ -16,29 +13,18 @@ public class FieldSystem : ReactiveSystem<GameEntity>, IInitializeSystem {
 
     public void Initialize() {
         GameEntity fieldEntity = _context.CreateEntity();
-        fieldEntity.AddField(FIELD_WIDTH, FIELD_HEIGHT);
+        fieldEntity.AddField(Util.instance.fieldWidth, Util.instance.fieldHeight);
 
-        for (int i = 0; i < FIELD_WIDTH; i++) {
-            for (int j = 0; j < FIELD_HEIGHT; j++) {
-                CreatePiece(i, j, 7);
+        for (int i = 0; i < Util.instance.fieldWidth; i++) {
+            for (int j = 0; j < Util.instance.fieldHeight; j++) {
+                bool isPiece = Random.Range(0f, 1f) > 0.15f;
+                if (isPiece) {
+                    Util.instance.CreatePiece(_context, i, j);
+                } else {
+                    Util.instance.CreateBlocker(_context, i, j);
+                }
             }
         }
-    }
-
-    private GameEntity CreatePiece(int x, int y, int colorRange) {
-        int colorId = Random.Range(0, colorRange + 1);
-        bool isPiece = colorId < 6;
-        string resourceName;
-        if (isPiece) {
-            resourceName = "Piece" + colorId.ToString();
-        } else {
-            resourceName = "Blocker";
-        }
-        GameEntity entity = _context.CreateEntity();
-        entity.isMovable = isPiece;
-        entity.AddPosition(x, y);
-        entity.AddResource(resourceName);
-        return entity;
     }
 
     protected override ICollector<GameEntity> GetTrigger(IContext<GameEntity> context) {

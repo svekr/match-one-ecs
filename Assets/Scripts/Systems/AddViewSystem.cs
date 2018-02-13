@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class AddViewSystem : ReactiveSystem<GameEntity> {
 
-    private Contexts _contexts;
+    private GameContext _context;
 
     public AddViewSystem(Contexts contexts) : base(contexts.game) {
-        _contexts = contexts;
+        _context = contexts.game;
     }
 
     protected override ICollector<GameEntity> GetTrigger(IContext<GameEntity> context) {
@@ -21,14 +21,7 @@ public class AddViewSystem : ReactiveSystem<GameEntity> {
 
     protected override void Execute(List<GameEntity> entities) {
         foreach (GameEntity entity in entities) {
-            GameObject prefab = Resources.Load<GameObject>(entity.resource.value);
-            if (prefab != null) {
-                GameObject view = Object.Instantiate(prefab);
-                if (view != null) {
-                    entity.AddView(view);
-                    view.Link(entity, _contexts.game);
-                }
-            }
+            Util.instance.CreateFieldElementView(entity, _context);
         }
     }
 } 

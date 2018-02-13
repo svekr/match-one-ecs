@@ -15,7 +15,7 @@ public class InputSystem : IExecuteSystem {
             if (raycast != null && raycast.collider != null && raycast.collider.transform != null) {
                 Vector3 raycastPosition = raycast.collider.transform.position;
                 var entity = _context.CreateEntity();
-                entity.AddInput((int)raycastPosition.x, (int)raycastPosition.y);
+                entity.AddInput((int)Mathf.Round(raycastPosition.x), (int)Mathf.Round(raycastPosition.y));
             }
         }
     }

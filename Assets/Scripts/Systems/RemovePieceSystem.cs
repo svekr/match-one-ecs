@@ -17,9 +17,6 @@ public class RemovePieceSystem : ReactiveSystem<GameEntity> {
 
     protected override void Execute(List<GameEntity> entities) {
         foreach (GameEntity entity in entities) {
-            if (entity.hasView) {
-                GameObject.Destroy(entity.view.value, 0.5f);
-            }
             entity.Destroy();
         }
     }
